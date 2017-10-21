@@ -2,23 +2,34 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
 
 func main() {
+
+	// Neural Network consts
+	const (
+		inputLayerSize  = 784
+		outputLayerSize = 10
+	)
+	// Neural Network vars
+	var (
+		net               Network
+		expected          [10]float64
+		hiddenLayersSizes []int
+	)
+
+	// File vars
 	var (
 		lineNumber    int
 		scannerImages *bufio.Scanner
 		scannerLabels *bufio.Scanner
-
-		net      Network
-		expected [10]float64
 	)
 
-	net.addLayer(784)
+	net.InitNetwork(inputLayerSize, hiddenLayersSizes, outputLayerSize)
+	// fmt.Println(net.layers[0])
 
 	// Load image file
 	trainImages, err := os.Open("train_images.txt")
@@ -42,7 +53,6 @@ func main() {
 	scannerLabels.Split(bufio.ScanLines)
 
 	// For each line
-LINE:
 	for scannerImages.Scan() {
 		lineNumber++
 		scannerLabels.Scan()
@@ -52,10 +62,6 @@ LINE:
 		// For each pixel in the line
 		for i, pixelString := range strings.Split(lineImage, " ") {
 			pixel, _ := strconv.Atoi(pixelString)
-			if i > 783 {
-				fmt.Print(lineNumber, " ")
-				continue LINE
-			}
 			net.layers[0].neurons[i].value = float64(pixel) / 255
 		}
 		expected[expectedValue] = 0
