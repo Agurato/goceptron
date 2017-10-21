@@ -10,32 +10,56 @@ import (
 
 func main() {
 	var (
-		inputLayers [784]float64
-		lineNumber  int
+		lineNumber    int
+		scannerImages *bufio.Scanner
+		scannerLabels *bufio.Scanner
+
+		net      Network
+		expected [10]float64
 	)
 
-	// Load images in arrays
+	net.addLayer(784)
+
+	// Load image file
 	trainImages, err := os.Open("train_images.txt")
 	if err != nil {
 		panic(err)
 	}
+	defer trainImages.Close()
 
-	scanner := bufio.NewScanner(trainImages)
-	scanner.Split(bufio.ScanLines)
+	// Load label file
+	trainLabels, err := os.Open("train_labels.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer trainLabels.Close()
+
+	// Main loop to repeat until learning is done
+	// for iter := 0; iter < 2; iter++ {
+	scannerImages = bufio.NewScanner(trainImages)
+	scannerImages.Split(bufio.ScanLines)
+	scannerLabels = bufio.NewScanner(trainLabels)
+	scannerLabels.Split(bufio.ScanLines)
 
 	// For each line
-	for scanner.Scan() {
-		line := scanner.Text()
-		// For each pixel in the line
-		if lineNumber == 0 {
-			for i, pixelString := range strings.Split(line, " ") {
-				pixel, _ := strconv.Atoi(pixelString)
-				inputLayers[i] = float64(pixel) / 255
-			}
-		}
+LINE:
+	for scannerImages.Scan() {
 		lineNumber++
+		scannerLabels.Scan()
+		lineImage := scannerImages.Text()
+		expectedValue, _ := strconv.Atoi(scannerLabels.Text())
+		expected[expectedValue] = 1
+		// For each pixel in the line
+		for i, pixelString := range strings.Split(lineImage, " ") {
+			pixel, _ := strconv.Atoi(pixelString)
+			if i > 783 {
+				fmt.Print(lineNumber, " ")
+				continue LINE
+			}
+			net.layers[0].neurons[i].value = float64(pixel) / 255
+		}
+		expected[expectedValue] = 0
 	}
-	trainImages.Close()
-
-	fmt.Println(inputLayers)
+	// net.layers[0].Println()
+	// }
 }
