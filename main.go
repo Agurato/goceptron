@@ -9,14 +9,14 @@ import (
 
 func main() {
 
-	// Neural Network consts
+	// Neural Perceptron consts
 	const (
 		inputLayerSize  = 784
 		outputLayerSize = 10
 	)
-	// Neural Network vars
+	// Neural Perceptron vars
 	var (
-		net               Network
+		p                 Perceptron
 		expected          [10]float64
 		hiddenLayersSizes []int
 	)
@@ -28,8 +28,8 @@ func main() {
 		scannerLabels *bufio.Scanner
 	)
 
-	net.InitNetwork(inputLayerSize, hiddenLayersSizes, outputLayerSize)
-	// fmt.Println(net.layers[0])
+	p.InitPerceptron(inputLayerSize, hiddenLayersSizes, outputLayerSize)
+	// fmt.Println(p.layers[0])
 
 	// Load image file
 	trainImages, err := os.Open("train_images.txt")
@@ -62,10 +62,10 @@ func main() {
 		// For each pixel in the line
 		for i, pixelString := range strings.Split(lineImage, " ") {
 			pixel, _ := strconv.Atoi(pixelString)
-			net.layers[0].neurons[i].value = float64(pixel) / 255
+			p.layers[0].neurons[i].value = float64(pixel) / 255
 		}
 		expected[expectedValue] = 0
 	}
-	// net.layers[0].Println()
+	// p.layers[0].Println()
 	// }
 }
