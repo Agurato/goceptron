@@ -24,3 +24,12 @@ func TestInitNetwork(t *testing.T) {
 		}
 	}
 }
+
+func TestAddLayer(t *testing.T) {
+	var net Network
+	net.AddLayer(10)
+
+	if net.layerNb != 1 || net.layers[0].size != 10 || net.layers[0].position != 0 || len(net.layers[0].neurons) != 10 {
+		t.Error("net.layerNb =", net.layerNb, "\nnet.layers[0].size =", net.layers[0].size, "\nnet.layers[0].position =", net.layers[0].position, "\nlen(net.layers[0].neurons) =", len(net.layers[0].neurons))
+	}
+}
