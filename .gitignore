@@ -16,5 +16,9 @@
 # VS Code
 .vscode/
 
+# Learning files
 train_images.txt
 train_labels.txt
+
+# Save files
+.goceptron

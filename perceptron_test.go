@@ -177,12 +177,12 @@ func TestSaveLoad(t *testing.T) {
 	p1.InitPerceptron(784, []int{100, 100}, 10)
 	p1.Layers[0].Neurons[0].Weights[0] = 1
 
-	err := p1.SaveToFile("save.tmp")
+	err := p1.SaveToFile("save.goceptron")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = p2.LoadFromFile("save.tmp")
+	err = p2.LoadFromFile("save.goceptron")
 	if err != nil {
 		t.Fatal(err)
 	}
