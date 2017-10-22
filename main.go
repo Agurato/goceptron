@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -55,6 +56,10 @@ func main() {
 	}
 	defer trainLabels.Close()
 
+	activation := func(input float64) float64 {
+		return 1 / (1 + math.Exp(-input))
+	}
+
 	// Main loop to repeat until learning is done
 	for iter := 0; iter < 100; iter++ {
 		start = time.Now()
@@ -83,7 +88,7 @@ func main() {
 				p.layers[0].neurons[i].value = float64(pixel) / 255
 			}
 
-			p.ComputeFromInput()
+			p.ComputeFromInputActivation(activation)
 			// p.Backpropagation(expected, 0.2)
 			outputError += p.Backpropagation(expected, 0.3)
 
@@ -93,6 +98,5 @@ func main() {
 
 		elapsed = time.Since(start)
 		fmt.Printf("%d: %f (%s)\n", iter, outputError/60000, elapsed)
-		// p.layers[0].Println()
 	}
 }

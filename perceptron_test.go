@@ -92,6 +92,37 @@ func TestCalculateLayer(t *testing.T) {
 	}
 }
 
+func TestCalculateLayerActivation(t *testing.T) {
+	var p Perceptron
+
+	activation := func(input float64) float64 {
+		if input < 0.5 {
+			return 0
+		}
+		return 1
+	}
+
+	p.AddLayer(2)
+	p.AddLayer(2)
+
+	p.layers[0].biases = make([]float64, 2)
+	p.layers[0].biases[0] = 0.5
+	p.layers[0].biases[1] = 0.07
+	p.layers[0].neurons[0].value = 0.2
+	p.layers[0].neurons[0].weights = []float64{0.1, 0.2}
+	p.layers[0].neurons[1].value = 0.7
+	p.layers[0].neurons[1].weights = []float64{0.2, 0.3}
+
+	p.CalculateLayerActivation(1, activation)
+
+	if p.layers[1].neurons[0].value != 1 {
+		t.Error("p.layers[1].neurons[0].value =", p.layers[1].neurons[0].value)
+	}
+	if p.layers[1].neurons[1].value != 0 {
+		t.Error("p.layers[1].neurons[1].value =", p.layers[1].neurons[1].value)
+	}
+}
+
 func TestComputeFromInput(t *testing.T) {
 	var p Perceptron
 	p.InitPerceptron(3, []int{3}, 3)
@@ -110,5 +141,33 @@ func TestComputeFromInput(t *testing.T) {
 	}
 	if p.layers[2].neurons[2].value <= 0 || p.layers[2].neurons[2].value > 1 {
 		t.Error("p.layers[2].neurons[2].value =", p.layers[2].neurons[2].value, ", expected in ]0, 1]")
+	}
+}
+
+func TestComputeFromInputActivation(t *testing.T) {
+	var p Perceptron
+	p.InitPerceptron(3, []int{3}, 3)
+
+	p.layers[0].neurons[0].value = 0.1
+	p.layers[0].neurons[1].value = 0.5
+	p.layers[0].neurons[2].value = 0.9
+
+	activation := func(input float64) float64 {
+		if input < 0.5 {
+			return 0
+		}
+		return 1
+	}
+
+	p.ComputeFromInputActivation(activation)
+
+	if p.layers[2].neurons[0].value != 0 && p.layers[2].neurons[0].value != 1 {
+		t.Error("p.layers[2].neurons[0].value =", p.layers[2].neurons[0].value, ", expected either 0 or 1")
+	}
+	if p.layers[2].neurons[1].value != 0 && p.layers[2].neurons[1].value != 1 {
+		t.Error("p.layers[2].neurons[1].value =", p.layers[2].neurons[1].value, ", expected either 0 or 1")
+	}
+	if p.layers[2].neurons[2].value != 0 && p.layers[2].neurons[2].value != 1 {
+		t.Error("p.layers[2].neurons[2].value =", p.layers[2].neurons[2].value, ", expected either 0 or 1")
 	}
 }

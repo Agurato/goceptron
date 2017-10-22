@@ -78,6 +78,7 @@ func (p *Perceptron) AddLayer(size int) {
 }
 
 // CalculateLayer calculates the new neuron values of the layer which have the position <layerPos> in the perceptron
+// The activation function is a sigmoid
 func (p *Perceptron) CalculateLayer(layerPos int) {
 	if layerPos > 0 {
 		layer := p.layers[layerPos]
@@ -93,10 +94,36 @@ func (p *Perceptron) CalculateLayer(layerPos int) {
 	}
 }
 
+// CalculateLayerActivation calculates the new neuron values of the layer which have the position <layerPos> in the perceptron
+// The activation function is given as a parameter
+func (p *Perceptron) CalculateLayerActivation(layerPos int, fn func(float64) float64) {
+	if layerPos > 0 {
+		layer := p.layers[layerPos]
+		prevLayer := p.layers[layerPos-1]
+		sum := make([]float64, layer.size)
+		for in := range layer.neurons {
+			for _, pn := range prevLayer.neurons {
+				sum[in] += pn.value * pn.weights[in]
+			}
+			sum[in] += prevLayer.biases[in]
+			p.layers[layerPos].neurons[in].value = fn(sum[in])
+		}
+	}
+}
+
 // ComputeFromInput computes new neuron values, except for the first layer
+// The activation function is a sigmoid
 func (p *Perceptron) ComputeFromInput() {
 	for i := 1; i < p.layerNb; i++ {
 		p.CalculateLayer(i)
+	}
+}
+
+// ComputeFromInputActivation computes new neuron values, except for the first layer
+// The activation function is given as a parameter
+func (p *Perceptron) ComputeFromInputActivation(fn func(float64) float64) {
+	for i := 1; i < p.layerNb; i++ {
+		p.CalculateLayerActivation(i, fn)
 	}
 }
 
