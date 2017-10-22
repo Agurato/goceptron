@@ -26,9 +26,9 @@ func TestInitPerceptron(t *testing.T) {
 					}
 				}
 			}
-			for ib, b := range l.bias {
+			for ib, b := range l.biases {
 				if b <= 0 || b > max {
-					t.Error("layers[", il, "].bias[", ib, "], got", b, " | max =", max)
+					t.Error("layers[", il, "].biases[", ib, "], got", b, " | max =", max)
 				}
 			}
 		}
@@ -55,16 +55,16 @@ func TestAddLayer(t *testing.T) {
 	if len(p.layers[0].neurons) != 10 {
 		t.Error("len(p.layers[0].neurons) =", len(p.layers[0].neurons), ", expected 10")
 	}
-	if len(p.layers[0].bias) != 0 {
-		t.Error("len(p.layers[0].bias) =", len(p.layers[0].bias), ", expected 0")
+	if len(p.layers[0].biases) != 0 {
+		t.Error("len(p.layers[0].biases) =", len(p.layers[0].biases), ", expected 0")
 	}
 
 	p.AddLayer(7)
-	if len(p.layers[0].bias) != 7 {
-		t.Error("len(p.layers[0].bias) =", len(p.layers[0].bias), ", expected 7")
+	if len(p.layers[0].biases) != 7 {
+		t.Error("len(p.layers[0].biases) =", len(p.layers[0].biases), ", expected 7")
 	}
-	if len(p.layers[1].bias) != 0 {
-		t.Error("len(p.layers[1].bias) =", len(p.layers[1].bias), ", expected 0")
+	if len(p.layers[1].biases) != 0 {
+		t.Error("len(p.layers[1].biases) =", len(p.layers[1].biases), ", expected 0")
 	}
 }
 
@@ -74,9 +74,9 @@ func TestCalculateLayer(t *testing.T) {
 	p.AddLayer(2)
 	p.AddLayer(2)
 
-	p.layers[0].bias = make([]float64, 2)
-	p.layers[0].bias[0] = 0.25
-	p.layers[0].bias[1] = 0.07
+	p.layers[0].biases = make([]float64, 2)
+	p.layers[0].biases[0] = 0.25
+	p.layers[0].biases[1] = 0.07
 	p.layers[0].neurons[0].value = 0.2
 	p.layers[0].neurons[0].weights = []float64{0.1, 0.2}
 	p.layers[0].neurons[1].value = 0.7

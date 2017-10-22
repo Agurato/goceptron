@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -17,8 +19,15 @@ func main() {
 	// Neural Perceptron vars
 	var (
 		p                 Perceptron
-		expected          [10]float64
+		expected          []float64
 		hiddenLayersSizes []int
+		outputError       float64
+	)
+
+	// Stat vars
+	var (
+		start   time.Time
+		elapsed time.Duration
 	)
 
 	// File vars
@@ -28,8 +37,9 @@ func main() {
 		scannerLabels *bufio.Scanner
 	)
 
+	expected = make([]float64, 10)
+	hiddenLayersSizes = []int{100, 100}
 	p.InitPerceptron(inputLayerSize, hiddenLayersSizes, outputLayerSize)
-	// fmt.Println(p.layers[0])
 
 	// Load image file
 	trainImages, err := os.Open("train_images.txt")
@@ -46,26 +56,43 @@ func main() {
 	defer trainLabels.Close()
 
 	// Main loop to repeat until learning is done
-	// for iter := 0; iter < 2; iter++ {
-	scannerImages = bufio.NewScanner(trainImages)
-	scannerImages.Split(bufio.ScanLines)
-	scannerLabels = bufio.NewScanner(trainLabels)
-	scannerLabels.Split(bufio.ScanLines)
+	for iter := 0; iter < 100; iter++ {
+		start = time.Now()
 
-	// For each line
-	for scannerImages.Scan() {
-		lineNumber++
-		scannerLabels.Scan()
-		lineImage := scannerImages.Text()
-		expectedValue, _ := strconv.Atoi(scannerLabels.Text())
-		expected[expectedValue] = 1
-		// For each pixel in the line
-		for i, pixelString := range strings.Split(lineImage, " ") {
-			pixel, _ := strconv.Atoi(pixelString)
-			p.layers[0].neurons[i].value = float64(pixel) / 255
+		trainImages.Seek(0, 0)
+		scannerImages = bufio.NewScanner(trainImages)
+		scannerImages.Split(bufio.ScanLines)
+		trainLabels.Seek(0, 0)
+		scannerLabels = bufio.NewScanner(trainLabels)
+		scannerLabels.Split(bufio.ScanLines)
+
+		outputError = 0
+		lineNumber = 0
+		// For each line
+		for scannerImages.Scan() {
+			lineNumber++
+			// if lineNumber < 3 {
+			scannerLabels.Scan()
+			lineImage := scannerImages.Text()
+			expectedValue, _ := strconv.Atoi(scannerLabels.Text())
+			expected[expectedValue] = 1
+
+			// For each pixel in the line
+			for i, pixelString := range strings.Split(lineImage, " ") {
+				pixel, _ := strconv.Atoi(pixelString)
+				p.layers[0].neurons[i].value = float64(pixel) / 255
+			}
+
+			p.ComputeFromInput()
+			// p.Backpropagation(expected, 0.2)
+			outputError += p.Backpropagation(expected, 0.3)
+
+			expected[expectedValue] = 0
+			// }
 		}
-		expected[expectedValue] = 0
+
+		elapsed = time.Since(start)
+		fmt.Printf("%d: %f (%s)\n", iter, outputError/60000, elapsed)
+		// p.layers[0].Println()
 	}
-	// p.layers[0].Println()
-	// }
 }

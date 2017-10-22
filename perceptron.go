@@ -18,7 +18,7 @@ type Layer struct {
 	position int
 	size     int
 	neurons  []Neuron
-	bias     []float64
+	biases   []float64
 }
 
 // Perceptron struct, contains the number of layers, and the list of layers in the perceptron
@@ -55,7 +55,7 @@ func (p *Perceptron) InitPerceptron(inputLayerSize int, hiddenLayersSizes []int,
 			}
 			// Initialize bias
 			for ib := 0; ib < nextLayerSize; ib++ {
-				p.layers[il].bias[ib] = rand.Float64() / float64(l.size+1)
+				p.layers[il].biases[ib] = rand.Float64() / float64(l.size+1)
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func (p *Perceptron) AddLayer(size int) {
 		p.layerNb++
 	}
 	if p.layerNb > 1 {
-		p.layers[p.layerNb-2].bias = make([]float64, p.layers[p.layerNb-1].size)
+		p.layers[p.layerNb-2].biases = make([]float64, p.layers[p.layerNb-1].size)
 	}
 }
 
@@ -87,7 +87,7 @@ func (p *Perceptron) CalculateLayer(layerPos int) {
 			for _, pn := range prevLayer.neurons {
 				sum[in] += pn.value * pn.weights[in]
 			}
-			sum[in] += prevLayer.bias[in]
+			sum[in] += prevLayer.biases[in]
 			p.layers[layerPos].neurons[in].value = 1 / (1 + math.Exp(-sum[in]))
 		}
 	}
@@ -98,6 +98,51 @@ func (p *Perceptron) ComputeFromInput() {
 	for i := 1; i < p.layerNb; i++ {
 		p.CalculateLayer(i)
 	}
+}
+
+// Backpropagation makes the perceptron learn by modifying the weights on all neurons
+func (p *Perceptron) Backpropagation(expected []float64, eta float64) (outputError float64) {
+	var (
+		diff  float64
+		delta [][]float64
+	)
+	delta = make([][]float64, p.layerNb-1)
+
+	// Calculate error and delta for the output layer
+	delta[p.layerNb-2] = make([]float64, p.layers[p.layerNb-1].size)
+	for in, n := range p.layers[p.layerNb-1].neurons {
+		diff = expected[in] - n.value
+		delta[p.layerNb-2][in] = n.value * (1 - n.value) * diff
+		outputError += math.Pow(diff, 2)
+	}
+
+	// Calculates delta for all hidden layers
+	// delta[il-1] is the delta for the layer with position il (since the input layer doesn't have a delta)
+	for il := p.layerNb - 2; il > 0; il-- {
+		layer := p.layers[il]
+		delta[il-1] = make([]float64, layer.size)
+		for in, n := range layer.neurons {
+			for inn := range p.layers[il+1].neurons {
+				delta[il-1][in] += n.weights[inn] * delta[il][inn]
+			}
+			delta[il-1][in] = n.value * (1 - n.value) * delta[il-1][in]
+		}
+	}
+
+	// Update weights for hidden & input layers, as well as biases
+	for il := p.layerNb - 2; il >= 0; il-- {
+		layer := p.layers[il]
+		for in, n := range layer.neurons {
+			for inn := range p.layers[il+1].neurons {
+				p.layers[il].neurons[in].weights[inn] += eta * delta[il][inn] * n.value
+			}
+		}
+		for ib := range layer.biases {
+			p.layers[il].biases[ib] += eta * delta[il][ib]
+		}
+	}
+
+	return
 }
 
 // Println prints neuron values in layer
