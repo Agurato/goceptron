@@ -41,13 +41,21 @@ func (p *Perceptron) InitPerceptron(inputLayerSize int, hiddenLayersSizes []int,
 
 	// Create weights
 	for il, l := range p.layers {
+		// If not the last layer
 		if l.position != p.layerNb-1 {
 			nextLayerSize := p.layers[il+1].size
+			// For each neuron
 			for in := range l.neurons {
+				// Create slice of weights
 				p.layers[il].neurons[in].weights = make([]float64, nextLayerSize)
+				// Initialize each weight
 				for iw := range p.layers[il].neurons[in].weights {
-					p.layers[il].neurons[in].weights[iw] = rand.Float64() / float64(l.size)
+					p.layers[il].neurons[in].weights[iw] = rand.Float64() / float64(l.size+1)
 				}
+			}
+			// Initialize bias
+			for ib := 0; ib < nextLayerSize; ib++ {
+				p.layers[il].bias[ib] = rand.Float64() / float64(l.size+1)
 			}
 		}
 	}
@@ -70,14 +78,16 @@ func (p *Perceptron) AddLayer(size int) {
 }
 
 // CalculateLayer calculates the new neuron values of the layer which have the position <layerPos> in the perceptron
-// TODO: Use bias
 func (p *Perceptron) CalculateLayer(layerPos int) {
 	if layerPos > 0 {
-		sum := make([]float64, p.layers[layerPos].size)
-		for in := range p.layers[layerPos].neurons {
-			for _, pn := range p.layers[layerPos-1].neurons {
+		layer := p.layers[layerPos]
+		prevLayer := p.layers[layerPos-1]
+		sum := make([]float64, layer.size)
+		for in := range layer.neurons {
+			for _, pn := range prevLayer.neurons {
 				sum[in] += pn.value * pn.weights[in]
 			}
+			sum[in] += prevLayer.bias[in]
 			p.layers[layerPos].neurons[in].value = 1 / (1 + math.Exp(-sum[in]))
 		}
 	}

@@ -18,11 +18,17 @@ func TestInitPerceptron(t *testing.T) {
 
 	for il, l := range p.layers {
 		if l.position != p.layerNb-1 {
+			max := 1 / float64(l.size+1)
 			for in, n := range l.neurons {
 				for iw, w := range n.weights {
-					if w <= 0 || w > 1/float64(l.size) {
-						t.Error("layers[", il, "].neurons[", in, "].weights[", iw, "], got ", w, " | max = ", 1/float64(l.size))
+					if w <= 0 || w > max {
+						t.Error("layers[", il, "].neurons[", in, "].weights[", iw, "], got ", w, " | max = ", max)
 					}
+				}
+			}
+			for ib, b := range l.bias {
+				if b <= 0 || b > max {
+					t.Error("layers[", il, "].bias[", ib, "], got", b, " | max =", max)
 				}
 			}
 		}
@@ -68,17 +74,20 @@ func TestCalculateLayer(t *testing.T) {
 	p.AddLayer(2)
 	p.AddLayer(2)
 
+	p.layers[0].bias = make([]float64, 2)
+	p.layers[0].bias[0] = 0.25
+	p.layers[0].bias[1] = 0.07
 	p.layers[0].neurons[0].value = 0.2
-	p.layers[0].neurons[0].weights = []float64{0.1, 0.5}
+	p.layers[0].neurons[0].weights = []float64{0.1, 0.2}
 	p.layers[0].neurons[1].value = 0.7
-	p.layers[0].neurons[1].weights = []float64{0.2, 0.6}
+	p.layers[0].neurons[1].weights = []float64{0.2, 0.3}
 
 	p.CalculateLayer(1)
 
-	if p.layers[1].neurons[0].value != 1/(1+math.Exp(-(0.2*0.1+0.7*0.2))) {
+	if p.layers[1].neurons[0].value != 1/(1+math.Exp(-(0.2*0.1+0.7*0.2+0.25))) {
 		t.Error("p.layers[1].neurons[0].value =", p.layers[1].neurons[0].value)
 	}
-	if p.layers[1].neurons[1].value != 1/(1+math.Exp(-(0.2*0.5+0.7*0.6))) {
+	if p.layers[1].neurons[1].value != 1/(1+math.Exp(-(0.2*0.2+0.7*0.3+0.07))) {
 		t.Error("p.layers[1].neurons[1].value =", p.layers[1].neurons[1].value)
 	}
 }

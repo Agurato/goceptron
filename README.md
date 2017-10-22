@@ -9,5 +9,3 @@ However, since these images are encoded in a weird format, I used this [Github r
 Note that only the compressed versions are uploaded here. You have to decompress the files (`train_images.txt.gz` and `train_labels.txt.gz`) to use this program.
 
 ## TODO
-
-- [ ] Bias in the weighted sum
