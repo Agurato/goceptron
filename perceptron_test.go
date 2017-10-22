@@ -49,6 +49,17 @@ func TestAddLayer(t *testing.T) {
 	if len(p.layers[0].neurons) != 10 {
 		t.Error("len(p.layers[0].neurons) =", len(p.layers[0].neurons), ", expected 10")
 	}
+	if len(p.layers[0].bias) != 0 {
+		t.Error("len(p.layers[0].bias) =", len(p.layers[0].bias), ", expected 0")
+	}
+
+	p.AddLayer(7)
+	if len(p.layers[0].bias) != 7 {
+		t.Error("len(p.layers[0].bias) =", len(p.layers[0].bias), ", expected 7")
+	}
+	if len(p.layers[1].bias) != 0 {
+		t.Error("len(p.layers[1].bias) =", len(p.layers[1].bias), ", expected 0")
+	}
 }
 
 func TestCalculateLayer(t *testing.T) {

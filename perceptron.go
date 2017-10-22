@@ -18,6 +18,7 @@ type Layer struct {
 	position int
 	size     int
 	neurons  []Neuron
+	bias     []float64
 }
 
 // Perceptron struct, contains the number of layers, and the list of layers in the perceptron
@@ -60,13 +61,16 @@ func (p *Perceptron) InitPerceptron(inputLayerSize int, hiddenLayersSizes []int,
 func (p *Perceptron) AddLayer(size int) {
 	if size > 0 {
 		neurons := make([]Neuron, size)
-		p.layers = append(p.layers, Layer{p.layerNb, size, neurons})
+		p.layers = append(p.layers, Layer{p.layerNb, size, neurons, []float64{}})
 		p.layerNb++
+	}
+	if p.layerNb > 1 {
+		p.layers[p.layerNb-2].bias = make([]float64, p.layers[p.layerNb-1].size)
 	}
 }
 
 // CalculateLayer calculates the new neuron values of the layer which have the position <layerPos> in the perceptron
-// TODO: Add bias
+// TODO: Use bias
 func (p *Perceptron) CalculateLayer(layerPos int) {
 	if layerPos > 0 {
 		sum := make([]float64, p.layers[layerPos].size)
