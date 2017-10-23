@@ -25,6 +25,7 @@ func main() {
 		expected          []float64
 		hiddenLayersSizes []int
 		outputError       float64
+		eta               float64
 	)
 
 	// Stat vars
@@ -43,6 +44,7 @@ func main() {
 	expected = make([]float64, 10)
 	hiddenLayersSizes = []int{100, 100}
 	p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
+	eta = 0.3
 
 	// Load image file
 	trainImages, err := os.Open("train_images.txt")
@@ -92,8 +94,7 @@ func main() {
 			}
 
 			p.ComputeFromInputActivation(activation)
-			// p.Backpropagation(expected, 0.2)
-			outputError += p.Backpropagation(expected, 0.3)
+			outputError += p.Backpropagation(expected, eta)
 
 			expected[expectedValue] = 0
 			if lineNumber%1000 == 0 {
