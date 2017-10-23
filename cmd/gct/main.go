@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	gct "github.com/Agurato/goceptron"
 )
 
 func main() {
@@ -19,7 +21,7 @@ func main() {
 	)
 	// Neural Perceptron vars
 	var (
-		p                 Perceptron
+		p                 gct.Perceptron
 		expected          []float64
 		hiddenLayersSizes []int
 		outputError       float64
@@ -40,7 +42,7 @@ func main() {
 
 	expected = make([]float64, 10)
 	hiddenLayersSizes = []int{100, 100}
-	p.InitPerceptron(inputLayersize, hiddenLayersSizes, outputLayersize)
+	p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
 
 	// Load image file
 	trainImages, err := os.Open("train_images.txt")

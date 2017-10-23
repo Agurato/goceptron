@@ -1,4 +1,5 @@
-package main
+// Package goceptron is a more-or-less complete package to manage a perceptron
+package goceptron
 
 import (
 	"encoding/gob"
@@ -29,8 +30,8 @@ type Perceptron struct {
 	Layers  []Layer
 }
 
-// InitPerceptron initializes the perceptron
-func (p *Perceptron) InitPerceptron(inputLayersize int, hiddenLayersSizes []int, outputLayersize int) {
+// Init initializes the perceptron
+func (p *Perceptron) Init(inputLayersize int, hiddenLayersSizes []int, outputLayersize int) {
 	// Create Layers
 	p.AddLayer(inputLayersize)
 	for _, Size := range hiddenLayersSizes {

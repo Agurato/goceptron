@@ -1,20 +1,20 @@
-package main
+package goceptron
 
 import (
 	"math"
 	"testing"
 )
 
-func TestInitPerceptron(t *testing.T) {
+func TestInit(t *testing.T) {
 	var p Perceptron
 
-	p.InitPerceptron(10, []int{}, 10)
+	p.Init(10, []int{}, 10)
 	if p.LayerNb != 2 {
 		t.Error(p.LayerNb, "Layers, expected 2")
 	}
 
 	p = Perceptron{}
-	p.InitPerceptron(10, []int{10}, 10)
+	p.Init(10, []int{10}, 10)
 
 	for il, l := range p.Layers {
 		if l.Position != p.LayerNb-1 {
@@ -125,7 +125,7 @@ func TestCalculateLayerActivation(t *testing.T) {
 
 func TestComputeFromInput(t *testing.T) {
 	var p Perceptron
-	p.InitPerceptron(3, []int{3}, 3)
+	p.Init(3, []int{3}, 3)
 
 	p.Layers[0].Neurons[0].Value = 0.1
 	p.Layers[0].Neurons[1].Value = 0.5
@@ -146,7 +146,7 @@ func TestComputeFromInput(t *testing.T) {
 
 func TestComputeFromInputActivation(t *testing.T) {
 	var p Perceptron
-	p.InitPerceptron(3, []int{3}, 3)
+	p.Init(3, []int{3}, 3)
 
 	p.Layers[0].Neurons[0].Value = 0.1
 	p.Layers[0].Neurons[1].Value = 0.5
@@ -174,7 +174,7 @@ func TestComputeFromInputActivation(t *testing.T) {
 
 func TestSaveLoad(t *testing.T) {
 	var p1, p2 Perceptron
-	p1.InitPerceptron(784, []int{100, 100}, 10)
+	p1.Init(784, []int{100, 100}, 10)
 	p1.Layers[0].Neurons[0].Weights[0] = 1
 
 	err := p1.SaveToFile("save.goceptron")
