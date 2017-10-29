@@ -83,18 +83,11 @@ func (p *Perceptron) AddLayer(Size int) {
 // CalculateLayer calculates the new neuron Values of the layer which have the Position <layerPos> in the perceptron
 // The activation function is a sigmoid
 func (p *Perceptron) CalculateLayer(layerPos int) {
-	if layerPos > 0 {
-		layer := p.Layers[layerPos]
-		prevLayer := p.Layers[layerPos-1]
-		sum := make([]float64, layer.Size)
-		for in := range layer.Neurons {
-			for _, pn := range prevLayer.Neurons {
-				sum[in] += pn.Value * pn.Weights[in]
-			}
-			sum[in] += prevLayer.Biases[in]
-			p.Layers[layerPos].Neurons[in].Value = 1 / (1 + math.Exp(-sum[in]))
-		}
+	activation := func(input float64) float64 {
+		return 1 / (1 + math.Exp(-input))
 	}
+
+	p.CalculateLayerActivation(layerPos, activation)
 }
 
 // CalculateLayerActivation calculates the new neuron Values of the layer which have the Position <layerPos> in the perceptron
@@ -117,9 +110,11 @@ func (p *Perceptron) CalculateLayerActivation(layerPos int, fn func(float64) flo
 // ComputeFromInput computes new neuron Values, except for the first layer
 // The activation function is a sigmoid
 func (p *Perceptron) ComputeFromInput() {
-	for i := 1; i < p.LayerNb; i++ {
-		p.CalculateLayer(i)
+	activation := func(input float64) float64 {
+		return 1 / (1 + math.Exp(-input))
 	}
+
+	p.ComputeFromInputActivation(activation)
 }
 
 // ComputeFromInputActivation computes new neuron Values, except for the first layer
@@ -173,6 +168,35 @@ func (p *Perceptron) Backpropagation(expected []float64, eta float64) (outputErr
 	}
 
 	return
+}
+
+// TryRecognition tests the rate of recognition of the values in the input neurons
+// The activation function is a sigmoid
+func (p Perceptron) TryRecognition(expected int) (rate float64) {
+	activation := func(input float64) float64 {
+		return 1 / (1 + math.Exp(-input))
+	}
+
+	return p.TryRecognitionActivation(expected, activation)
+}
+
+// TryRecognitionActivation tests the rate of recognition of the values in the input neurons
+// The activation function is given as a parameter
+func (p Perceptron) TryRecognitionActivation(expected int, fn func(float64) float64) float64 {
+	var (
+		sum              float64
+		lastLayerNeurons []Neuron
+	)
+
+	p.ComputeFromInputActivation(fn)
+
+	lastLayerNeurons = p.Layers[p.LayerNb-1].Neurons
+
+	for _, n := range lastLayerNeurons {
+		sum += n.Value
+	}
+
+	return lastLayerNeurons[expected].Value / sum
 }
 
 // SaveToFile saves the perceptron to a given file

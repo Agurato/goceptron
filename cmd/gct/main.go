@@ -24,119 +24,180 @@ func main() {
 		hiddenLayersSizes []int
 		outputError       float64
 		eta               float64
+		activation        func(input float64) float64
+		expectedValue     int
 	)
 
 	// Stat vars
 	var (
+		iter    uint32
 		start   time.Time
 		elapsed time.Duration
 	)
 
 	// File vars
 	var (
-		imageNb   uint32
-		imagePos  uint32
-		imageSize uint32
-		pixelPos  uint32
+		trainImages *os.File
+		trainLabels *os.File
+		testImages  *os.File
+		testLabels  *os.File
 
-		image []byte
-		label []byte
+		imageNb      uint32
+		imagePos     uint32
+		imageSize    uint32
+		testImagePos uint32
+
+		trainImage []byte
+		trainLabel []byte
+		testImage  []byte
+		testLabel  []byte
 	)
+
+	var err error
+	const testNumber uint32 = 1000
+	const testInterval uint32 = 10000
 
 	expected = make([]float64, 10)
 	hiddenLayersSizes = []int{100}
 	p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
 	eta = 0.3
 
-	// Load image file
-	trainImages, err := os.Open("train-images.idx3-ubyte")
+	// Load train image file
+	trainImages, err = os.Open("train-images.idx3-ubyte")
 	if err != nil {
 		panic(err)
 	}
 	defer trainImages.Close()
 
-	// Load label file
-	trainLabels, err := os.Open("train-labels.idx1-ubyte")
+	// Load train label file
+	trainLabels, err = os.Open("train-labels.idx1-ubyte")
 	if err != nil {
 		panic(err)
 	}
 	defer trainLabels.Close()
 
-	activation := func(input float64) float64 {
+	// Load test image file
+	testImages, err = os.Open("t10k-images.idx3-ubyte")
+	if err != nil {
+		panic(err)
+	}
+	defer testImages.Close()
+
+	// Load test label file
+	testLabels, err = os.Open("t10k-labels.idx1-ubyte")
+	if err != nil {
+		panic(err)
+	}
+	defer testLabels.Close()
+
+	imageNb, imageSize, err = checkFiles(trainImages, trainLabels)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	_, _, err = checkFiles(testImages, testLabels)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	trainImage = make([]byte, imageSize)
+	trainLabel = make([]byte, 1)
+	testImage = make([]byte, imageSize)
+	testLabel = make([]byte, 1)
+
+	activation = func(input float64) float64 {
 		return 1 / (1 + math.Exp(-input))
 	}
 
-	magicNumberImages := make([]byte, 4)
-	trainImages.Read(magicNumberImages)
-	imageNbImages := make([]byte, 4)
-	trainImages.Read(imageNbImages)
-	rowNb := make([]byte, 4)
-	trainImages.Read(rowNb)
-	columnNb := make([]byte, 4)
-	trainImages.Read(columnNb)
-
-	if binary.BigEndian.Uint32(magicNumberImages) != 2051 {
-		fmt.Fprintln(os.Stderr, "Wrong magic number in 'train-images.idx3-ubyte'")
-		os.Exit(1)
-	}
-
-	imageNb = binary.BigEndian.Uint32(imageNbImages)
-
-	magicNumberLabels := make([]byte, 4)
-	trainLabels.Read(magicNumberLabels)
-	imageNbLabels := make([]byte, 4)
-	trainLabels.Read(imageNbLabels)
-
-	if binary.BigEndian.Uint32(magicNumberLabels) != 2049 {
-		fmt.Fprintln(os.Stderr, "Wrong magic number in 'train-labels.idx1-ubyte'")
-		os.Exit(1)
-	}
-
-	if imageNb != binary.BigEndian.Uint32(imageNbLabels) {
-		fmt.Fprintln(os.Stderr, "Different image number in 'train-labels.idx1-ubyte' and 'train-images.idx3-ubyte'")
-		os.Exit(1)
-	}
-
-	imageSize = binary.BigEndian.Uint32(rowNb) * binary.BigEndian.Uint32(columnNb)
-	image = make([]byte, imageSize)
-	label = make([]byte, 1)
-
+	start = time.Now()
 	// Main loop to repeat until learning is done
-	for iter := 0; iter < 100; iter++ {
-		// Time calculated for 60000 learnings
-		start = time.Now()
+	for iter = 0; iter < 10; iter++ {
 
-		// Go to the beginning of the files to parse them
+		// Go to the beginning of the files' data to parse them
 		trainImages.Seek(16, 0)
 		trainLabels.Seek(8, 0)
 
-		outputError = 0
-
 		// For each image
 		for imagePos = 0; imagePos < imageNb; imagePos++ {
-			pixelPos = 0
-
-			trainImages.Read(image)
+			trainImages.Read(trainImage)
 			// For each pixel
-			for _, pixel := range image {
-				p.Layers[0].Neurons[pixelPos].Value = float64(pixel) / 255
-				pixelPos++
+			for ipixel, pixel := range trainImage {
+				p.Layers[0].Neurons[ipixel].Value = float64(pixel) / 255
 			}
 
-			trainLabels.Read(label)
-			expectedValue := label[0]
+			trainLabels.Read(trainLabel)
+			expectedValue = int(trainLabel[0])
 			expected[expectedValue] = 1
 
 			p.ComputeFromInputActivation(activation)
 			outputError += p.Backpropagation(expected, eta)
 
 			expected[expectedValue] = 0
-			if imagePos%1000 == 0 {
-				fmt.Printf("\r%d: Image n°%d", iter, imagePos)
+			if imagePos%testInterval == 0 && (iter*imageNb+imagePos != 0) {
+				elapsed = time.Since(start)
+				fmt.Printf("Image n°%d (%s):\n", iter*imageNb+imagePos, elapsed)
+				fmt.Printf("\tMean MSE =\t%.10f\n", outputError/float64(testInterval))
+				outputError = 0
+
+				testImages.Seek(16, 0)
+				testLabels.Seek(8, 0)
+
+				var meanRate float64
+				for testImagePos = 0; testImagePos < testNumber; testImagePos++ {
+					testImages.Read(testImage)
+					// For each pixel
+					for ipixel, pixel := range testImage {
+						p.Layers[0].Neurons[ipixel].Value = float64(pixel) / 255
+					}
+
+					testLabels.Read(testLabel)
+
+					meanRate += p.TryRecognition(int(testLabel[0]))
+				}
+				meanRate /= float64(testNumber)
+
+				fmt.Printf("\tMean Recognition = %f %%\n", meanRate*100)
 			}
 		}
-
-		elapsed = time.Since(start)
-		fmt.Printf("\r%d: %f (%s)\n", iter, outputError/60000, elapsed)
 	}
+}
+
+func checkFiles(imagesFile, labelsFile *os.File) (uint32, uint32, error) {
+	var (
+		imageNb   uint32
+		imageSize uint32
+	)
+
+	magicNumberImages := make([]byte, 4)
+	imagesFile.Read(magicNumberImages)
+	imageNbImages := make([]byte, 4)
+	imagesFile.Read(imageNbImages)
+	rowNb := make([]byte, 4)
+	imagesFile.Read(rowNb)
+	columnNb := make([]byte, 4)
+	imagesFile.Read(columnNb)
+
+	if binary.BigEndian.Uint32(magicNumberImages) != 2051 {
+		return 0, 0, fmt.Errorf("Wrong magic number in '%s'", imagesFile.Name())
+	}
+
+	imageNb = binary.BigEndian.Uint32(imageNbImages)
+	imageSize = binary.BigEndian.Uint32(rowNb) * binary.BigEndian.Uint32(columnNb)
+
+	magicNumberLabels := make([]byte, 4)
+	labelsFile.Read(magicNumberLabels)
+	imageNbLabels := make([]byte, 4)
+	labelsFile.Read(imageNbLabels)
+
+	if binary.BigEndian.Uint32(magicNumberLabels) != 2049 {
+		return 0, 0, fmt.Errorf("Wrong magic number in '%s'", labelsFile.Name())
+	}
+
+	if imageNb != binary.BigEndian.Uint32(imageNbLabels) {
+		return 0, 0, fmt.Errorf("Different number of images in '%s' and '%s'", imagesFile.Name(), labelsFile.Name())
+	}
+
+	return imageNb, imageSize, nil
 }
