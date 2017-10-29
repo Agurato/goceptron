@@ -33,7 +33,7 @@ p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
 ### Learning
 
 For the forward propagation, you can either implement your own neuron activation function, using `p.ComputeFromInputActivation`, or use `p.ComputeFromInput` to use a sigmoid function.
-To make the backpropagation, you give as parameters, the expected values of each output neuron, as well as the learning rate $\eta$ (eta).
+To make the backpropagation, you give as parameters, the expected values of each output neuron, as well as the learning rate eta.
 
 ```golang
 var (
