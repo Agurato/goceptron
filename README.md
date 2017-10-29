@@ -57,7 +57,7 @@ mse = p.Backpropagation(expected, eta)
 
 ### Testing the neural network
 
-To test the neural network and get the recognition rate, use `TryRecognitionActivation` (to be able to use your own activation function) or `TryRecognition` (to use a sigmoid). The return value is the rate of recognition (between $0$ and $1$)
+To test the neural network and get the recognition rate, use `TryRecognitionActivation` (to be able to use your own activation function) or `TryRecognition` (to use a sigmoid). The return value is the rate of recognition (between 0 and 1)
 
 ```golang
 var (
