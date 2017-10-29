@@ -92,7 +92,7 @@ func TestCalculateLayer(t *testing.T) {
 	}
 }
 
-func TestCalculateLayerActivation(t *testing.T) {
+func TestCalculateLayerCustom(t *testing.T) {
 	var p Perceptron
 
 	activation := func(input float64) float64 {
@@ -113,7 +113,7 @@ func TestCalculateLayerActivation(t *testing.T) {
 	p.Layers[0].Neurons[1].Value = 0.7
 	p.Layers[0].Neurons[1].Weights = []float64{0.2, 0.3}
 
-	p.CalculateLayerActivation(1, activation)
+	p.CalculateLayerCustom(1, activation)
 
 	if p.Layers[1].Neurons[0].Value != 1 {
 		t.Error("p.Layers[1].Neurons[0].Value =", p.Layers[1].Neurons[0].Value)
@@ -144,7 +144,7 @@ func TestComputeFromInput(t *testing.T) {
 	}
 }
 
-func TestComputeFromInputActivation(t *testing.T) {
+func TestComputeFromInputCustom(t *testing.T) {
 	var p Perceptron
 	p.Init(3, []int{3}, 3)
 
@@ -159,7 +159,7 @@ func TestComputeFromInputActivation(t *testing.T) {
 		return 1
 	}
 
-	p.ComputeFromInputActivation(activation)
+	p.ComputeFromInputCustom(activation)
 
 	if p.Layers[2].Neurons[0].Value != 0 && p.Layers[2].Neurons[0].Value != 1 {
 		t.Error("p.Layers[2].Neurons[0].Value =", p.Layers[2].Neurons[0].Value, ", expected either 0 or 1")

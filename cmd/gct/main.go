@@ -25,6 +25,7 @@ func main() {
 		outputError       float64
 		eta               float64
 		activation        func(input float64) float64
+		derivative        func(input float64) float64
 		expectedValue     int
 	)
 
@@ -54,11 +55,11 @@ func main() {
 	)
 
 	var err error
-	const testNumber uint32 = 1000
+	const testNumber uint32 = 10000
 	const testInterval uint32 = 10000
 
 	expected = make([]float64, 10)
-	hiddenLayersSizes = []int{100}
+	hiddenLayersSizes = []int{300}
 	p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
 	eta = 0.3
 
@@ -108,7 +109,10 @@ func main() {
 	testLabel = make([]byte, 1)
 
 	activation = func(input float64) float64 {
-		return 1 / (1 + math.Exp(-input))
+		return 1 / (1 + math.Exp(-input/2))
+	}
+	derivative = func(input float64) float64 {
+		return input * (1 - input)
 	}
 
 	start = time.Now()
@@ -131,8 +135,8 @@ func main() {
 			expectedValue = int(trainLabel[0])
 			expected[expectedValue] = 1
 
-			p.ComputeFromInputActivation(activation)
-			outputError += p.Backpropagation(expected, eta)
+			p.ComputeFromInputCustom(activation)
+			outputError += p.BackpropagationCustom(expected, eta, derivative)
 
 			expected[expectedValue] = 0
 			if imagePos%testInterval == 0 && (iter*imageNb+imagePos != 0) {

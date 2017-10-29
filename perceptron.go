@@ -87,12 +87,12 @@ func (p *Perceptron) CalculateLayer(layerPos int) {
 		return 1 / (1 + math.Exp(-input))
 	}
 
-	p.CalculateLayerActivation(layerPos, activation)
+	p.CalculateLayerCustom(layerPos, activation)
 }
 
-// CalculateLayerActivation calculates the new neuron Values of the layer which have the Position <layerPos> in the perceptron
+// CalculateLayerCustom calculates the new neuron Values of the layer which have the Position <layerPos> in the perceptron
 // The activation function is given as a parameter
-func (p *Perceptron) CalculateLayerActivation(layerPos int, fn func(float64) float64) {
+func (p *Perceptron) CalculateLayerCustom(layerPos int, fn func(float64) float64) {
 	if layerPos > 0 {
 		layer := p.Layers[layerPos]
 		prevLayer := p.Layers[layerPos-1]
@@ -114,19 +114,29 @@ func (p *Perceptron) ComputeFromInput() {
 		return 1 / (1 + math.Exp(-input))
 	}
 
-	p.ComputeFromInputActivation(activation)
+	p.ComputeFromInputCustom(activation)
 }
 
-// ComputeFromInputActivation computes new neuron Values, except for the first layer
+// ComputeFromInputCustom computes new neuron Values, except for the first layer
 // The activation function is given as a parameter
-func (p *Perceptron) ComputeFromInputActivation(fn func(float64) float64) {
+func (p *Perceptron) ComputeFromInputCustom(fn func(float64) float64) {
 	for i := 1; i < p.LayerNb; i++ {
-		p.CalculateLayerActivation(i, fn)
+		p.CalculateLayerCustom(i, fn)
 	}
 }
 
 // Backpropagation makes the perceptron learn by modifying the Weights on all Neurons
 func (p *Perceptron) Backpropagation(expected []float64, eta float64) (outputError float64) {
+	derivative := func(input float64) float64 {
+		return input * (1 - input)
+	}
+
+	return p.BackpropagationCustom(expected, eta, derivative)
+}
+
+// BackpropagationCustom makes the perceptron learn by modifying the Weights on all Neurons
+// The derivative of the activation function is given as parameter
+func (p *Perceptron) BackpropagationCustom(expected []float64, eta float64, fn func(float64) float64) (outputError float64) {
 	var (
 		diff  float64
 		delta [][]float64
@@ -137,7 +147,7 @@ func (p *Perceptron) Backpropagation(expected []float64, eta float64) (outputErr
 	delta[p.LayerNb-2] = make([]float64, p.Layers[p.LayerNb-1].Size)
 	for in, n := range p.Layers[p.LayerNb-1].Neurons {
 		diff = expected[in] - n.Value
-		delta[p.LayerNb-2][in] = n.Value * (1 - n.Value) * diff
+		delta[p.LayerNb-2][in] = fn(n.Value) * diff
 		outputError += math.Pow(diff, 2)
 	}
 
@@ -150,7 +160,7 @@ func (p *Perceptron) Backpropagation(expected []float64, eta float64) (outputErr
 			for inn := range p.Layers[il+1].Neurons {
 				delta[il-1][in] += n.Weights[inn] * delta[il][inn]
 			}
-			delta[il-1][in] = n.Value * (1 - n.Value) * delta[il-1][in]
+			delta[il-1][in] = fn(n.Value) * delta[il-1][in]
 		}
 	}
 
@@ -177,18 +187,18 @@ func (p Perceptron) TryRecognition(expected int) (rate float64) {
 		return 1 / (1 + math.Exp(-input))
 	}
 
-	return p.TryRecognitionActivation(expected, activation)
+	return p.TryRecognitionCustom(expected, activation)
 }
 
-// TryRecognitionActivation tests the rate of recognition of the values in the input neurons
+// TryRecognitionCustom tests the rate of recognition of the values in the input neurons
 // The activation function is given as a parameter
-func (p Perceptron) TryRecognitionActivation(expected int, fn func(float64) float64) float64 {
+func (p Perceptron) TryRecognitionCustom(expected int, fn func(float64) float64) float64 {
 	var (
 		sum              float64
 		lastLayerNeurons []Neuron
 	)
 
-	p.ComputeFromInputActivation(fn)
+	p.ComputeFromInputCustom(fn)
 
 	lastLayerNeurons = p.Layers[p.LayerNb-1].Neurons
 

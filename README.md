@@ -32,7 +32,7 @@ p.Init(inputLayersize, hiddenLayersSizes, outputLayersize)
 
 ### Learning
 
-For the forward propagation, you can either implement your own neuron activation function, using `p.ComputeFromInputActivation`, or use `p.ComputeFromInput` to use a sigmoid function.
+For the forward propagation, you can either implement your own neuron activation function, using `p.ComputeFromInputCustom`, or use `p.ComputeFromInput` to use a sigmoid function.
 To make the backpropagation, you give as parameters, the expected values of each output neuron, as well as the learning rate eta.
 
 ```golang
@@ -51,19 +51,19 @@ eta = 0.3
 // Init input layer here
 // Modify expected values
 
-p.ComputeFromInputActivation(activation)
+p.ComputeFromInputCustom(activation)
 mse = p.Backpropagation(expected, eta)
 ```
 
 ### Testing the neural network
 
-To test the neural network and get the recognition rate, use `TryRecognitionActivation` (to be able to use your own activation function) or `TryRecognition` (to use a sigmoid). The return value is the rate of recognition (between 0 and 1)
+To test the neural network and get the recognition rate, use `TryRecognitionCustom` (to be able to use your own activation function) or `TryRecognition` (to use a sigmoid). The return value is the rate of recognition (between 0 and 1)
 
 ```golang
 var (
     rate float64
 )
-rate = p.TryRecognitionActivation(activation)
+rate = p.TryRecognitionCustom(activation)
 ```
 
 Full example, using the MNIST dataset, is available [here](https://github.com/Agurato/goceptron/blob/master/cmd/gct/main.go).
