@@ -23,4 +23,4 @@ train_labels.txt
 *.idx*-ubyte
 
 # Save files
-.goceptron
+*.goceptron
