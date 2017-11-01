@@ -182,7 +182,7 @@ func (p *Perceptron) BackpropagationCustom(expected []float64, eta float64, fn f
 
 // TryRecognition tests the rate of recognition of the values in the input neurons
 // The activation function is a sigmoid
-func (p Perceptron) TryRecognition(expected int) (rate float64) {
+func (p Perceptron) TryRecognition(expected int) (float64, bool) {
 	activation := func(input float64) float64 {
 		return 1 / (1 + math.Exp(-input))
 	}
@@ -192,9 +192,11 @@ func (p Perceptron) TryRecognition(expected int) (rate float64) {
 
 // TryRecognitionCustom tests the rate of recognition of the values in the input neurons
 // The activation function is given as a parameter
-func (p Perceptron) TryRecognitionCustom(expected int, fn func(float64) float64) float64 {
+func (p Perceptron) TryRecognitionCustom(expected int, fn func(float64) float64) (float64, bool) {
 	var (
 		sum              float64
+		max              float64
+		imax             int
 		lastLayerNeurons []Neuron
 	)
 
@@ -202,11 +204,15 @@ func (p Perceptron) TryRecognitionCustom(expected int, fn func(float64) float64)
 
 	lastLayerNeurons = p.Layers[p.LayerNb-1].Neurons
 
-	for _, n := range lastLayerNeurons {
+	for in, n := range lastLayerNeurons {
 		sum += n.Value
+		if n.Value > max {
+			max = n.Value
+			imax = in
+		}
 	}
 
-	return lastLayerNeurons[expected].Value / sum
+	return lastLayerNeurons[expected].Value / sum, (imax == expected)
 }
 
 // SaveToFile saves the perceptron to a given file

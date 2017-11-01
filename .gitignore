@@ -24,3 +24,4 @@ train_labels.txt
 
 # Save files
 *.goceptron
+*.gct

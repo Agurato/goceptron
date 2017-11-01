@@ -190,14 +190,14 @@ func TestTryRecognition(t *testing.T) {
 	output1 := 1 / (1 + math.Exp(-(0.2*0.2 + 0.7*0.3 + 0.07)))
 	sum := output0 + output1
 
-	rate := p.TryRecognition(0)
-	if rate != output0/sum {
-		t.Error("rate =", rate, ", expected", output0/sum)
+	certainty, _ := p.TryRecognition(0)
+	if certainty != output0/sum {
+		t.Error("certainty =", certainty, ", expected", output0/sum)
 	}
 
-	rate = p.TryRecognition(1)
-	if rate != output1/sum {
-		t.Error("rate =", rate, ", expected", output1/sum)
+	certainty, _ = p.TryRecognition(1)
+	if certainty != output1/sum {
+		t.Error("certainty =", certainty, ", expected", output1/sum)
 	}
 }
 

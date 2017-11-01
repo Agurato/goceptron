@@ -31,9 +31,10 @@ func main() {
 
 	// Stat vars
 	var (
-		iter    uint32
-		start   time.Time
-		elapsed time.Duration
+		iter      uint32
+		start     time.Time
+		elapsed   time.Duration
+		correctNb uint32
 	)
 
 	// File vars
@@ -117,7 +118,7 @@ func main() {
 
 	start = time.Now()
 	// Main loop to repeat until learning is done
-	for iter = 0; iter < 10; iter++ {
+	for iter = 0; iter < 5; iter++ {
 
 		// Go to the beginning of the files' data to parse them
 		trainImages.Seek(16, 0)
@@ -135,20 +136,24 @@ func main() {
 			expectedValue = int(trainLabel[0])
 			expected[expectedValue] = 1
 
+			// Forward propagation
 			p.ComputeFromInputCustom(activation)
+			// Back-propagation
 			outputError += p.BackpropagationCustom(expected, eta, derivative)
 
 			expected[expectedValue] = 0
 			if imagePos%testInterval == 0 && (iter*imageNb+imagePos != 0) {
+				// eta /= 1.01
 				elapsed = time.Since(start)
-				fmt.Printf("Image n°%d (%s):\n", iter*imageNb+imagePos, elapsed)
+				fmt.Printf("Image n°%d (%s): eta=%f\n", iter*imageNb+imagePos, elapsed, eta)
 				fmt.Printf("\tMean MSE =\t%.10f\n", outputError/float64(testInterval))
 				outputError = 0
 
 				testImages.Seek(16, 0)
 				testLabels.Seek(8, 0)
 
-				var meanRate float64
+				var meanCertainty float64
+				correctNb = 0
 				for testImagePos = 0; testImagePos < testNumber; testImagePos++ {
 					testImages.Read(testImage)
 					// For each pixel
@@ -158,14 +163,23 @@ func main() {
 
 					testLabels.Read(testLabel)
 
-					meanRate += p.TryRecognition(int(testLabel[0]))
+					recogCertainty, correct := p.TryRecognitionCustom(int(testLabel[0]), activation)
+					meanCertainty += recogCertainty
+					if correct {
+						correctNb++
+					}
 				}
-				meanRate /= float64(testNumber)
+				meanCertainty /= float64(testNumber)
 
-				fmt.Printf("\tMean Recognition = %f %%\n", meanRate*100)
+				fmt.Printf("\tMean certainty = %f %%\n", meanCertainty*100)
+				fmt.Printf("\tRecognition rate = %.2f %%\n", float64(correctNb)/float64(testNumber)*100)
 			}
 		}
 	}
+
+	date := time.Now().Local()
+	saveFileName := fmt.Sprintf("%04d%02d%02d-%02d%02d%02d.gct", date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), date.Second())
+	p.SaveToFile(saveFileName)
 }
 
 func checkFiles(imagesFile, labelsFile *os.File) (uint32, uint32, error) {
