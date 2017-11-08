@@ -5,5 +5,5 @@ import (
 )
 
 func TestGrayscaledImage(t *testing.T) {
-	t.LogGrayscaledImage("input.jpg"))
+	t.Log(GrayscaledImage("input.jpg"))
 }
